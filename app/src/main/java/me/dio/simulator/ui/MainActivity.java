@@ -3,7 +3,6 @@ package me.dio.simulator.ui;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,12 +12,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
+import java.util.Random;
 
 import me.dio.simulator.R;
 import me.dio.simulator.data.MatchesApi;
 import me.dio.simulator.databinding.ActivityMainBinding;
 import me.dio.simulator.domain.Match;
-import me.dio.simulator.domain.Team;
 import me.dio.simulator.ui.adapter.MatchesAdapter;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private MatchesApi matchesApi;
-    private RecyclerView.Adapter matchesAdapter;
+    private MatchesAdapter matchesAdapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupHttpClient() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://thaisperlho.github.io/matches-simulator-api/")
+                .baseUrl("https://digitalinnovationone.github.io/matches-simulator-api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -69,7 +68,13 @@ public class MainActivity extends AppCompatActivity {
             view.animate().rotationBy(360).setDuration(500).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    //TODO Implementar o algoritimo de simulçaõ de partidas.
+                    Random random = new Random();
+                    for (int i = 0; i < matchesAdapter.getItemCount(); i++) {
+                        Match match = matchesAdapter.getMatches().get(i);
+                        match.getHomeTeam().setScore(random.nextInt(match.getHomeTeam().getStars() + 1));
+                        match.getAwayTeam().setScore(random.nextInt(match.getAwayTeam().getStars() + 1));
+                        matchesAdapter.notifyItemChanged(i);
+                    }
                 }
             });
         });
@@ -80,9 +85,9 @@ public class MainActivity extends AppCompatActivity {
         matchesApi.getMatches().enqueue(new Callback<List<Match>>() {
             @Override
             public void onResponse(Call<List<Match>> call, Response<List<Match>> response) {
-                if (response.isSuccessful()){
+                if (response.isSuccessful()) {
                     List<Match> matches = response.body();
-                    matchesAdapter =  new MatchesAdapter(matches);
+                    matchesAdapter = new MatchesAdapter(matches);
                     binding.rvMatches.setAdapter(matchesAdapter);
                 } else {
                     showErrorMessage();
@@ -99,6 +104,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showErrorMessage() {
-        Snackbar.make(binding.fabSimulator,R.string.error_api, Snackbar.LENGTH_LONG).show();
+        Snackbar.make(binding.fabSimulator, R.string.error_api, Snackbar.LENGTH_LONG).show();
     }
 }
